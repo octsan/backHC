@@ -1,0 +1,6 @@
+@ERP_MaxysHC_HostAddress = http://localhost:5064
+
+GET {{ERP_MaxysHC_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
