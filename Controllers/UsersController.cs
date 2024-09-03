@@ -46,9 +46,11 @@ namespace ERP_MaxysHC.Controllers
             var dat = JsonConvert.SerializeObject(userModel);
             var data = JsonConvert.DeserializeObject<dynamic>(dat.ToString());
             string user = data.User.ToString();
+            string email = data.Email.ToString();
             string password = data.Password.ToString();
             string ePassword = UserRepository.GetSHA256(password);
-            UsersModel _user = _userRepository.GetAllUsers().Result.Where(x => x.User == user && x.Password == ePassword).FirstOrDefault();//Cambiar ePassword por password para iniciar sesión desde Postman
+            UsersModel _user = _userRepository.GetAllUsers().Result.Where(x => x.User == user && x.Password == ePassword || x.Email == email && x.Password == ePassword).FirstOrDefault();
+
             if (_user == null)
             {
                 return new
@@ -62,13 +64,13 @@ namespace ERP_MaxysHC.Controllers
             var jwt = _configuration.GetSection("Jwt").Get<Jwt>();
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, jwt.Subject),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                new Claim("Id_user", _user.Id_user.ToString()),
-                new Claim("Password", _user.Password.ToString()),
-                new Claim("Position", _user.Position.ToString()),
-            };
+        new Claim(JwtRegisteredClaimNames.Sub, jwt.Subject),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+        new Claim("Id_user", _user.Id_user.ToString()),
+        new Claim("Password", _user.Password.ToString()),
+        new Claim("Position", _user.Position.ToString()),
+    };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key));
             var singIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
@@ -83,8 +85,8 @@ namespace ERP_MaxysHC.Controllers
                 success = true,
                 message = "Token generado correctamente",
                 result = new JwtSecurityTokenHandler().WriteToken(token),
-
             };
         }
     }
+    
 }

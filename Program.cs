@@ -1,7 +1,9 @@
 
 using ERP_MaxysHC.Maxys.Data;
 using ERP_MaxysHC.Maxys.Data.Repositories;
+using ERP_MaxysHC.Maxys.Data.RepositoriesSQL;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
@@ -49,17 +51,26 @@ namespace ERP_MaxysHC
                 });
             });
 
-            //COnnection to the database
+            //COnnection to the database MySQL
             var mySQLConfiguration = new MySQLConfiguration(builder.Configuration.GetConnectionString("MySqlConnection"));
             builder.Services.AddSingleton(mySQLConfiguration);
+
+            //Connection to the database SQL Server
+            builder.Services.AddDbContext<MaxysContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            
+            var SQLConfiguration = new SQLConfiguration(builder.Configuration.GetConnectionString("DefaultConnection"));
+            builder.Services.AddSingleton(SQLConfiguration);
 
             // Add services to the container.
             builder.Services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
                     ).AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
 
-            // Dependency Injection
+            // Dependency Injection MySQL
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+            // Dependency Injection SQL Server
+            builder.Services.AddScoped<IOCDocumentosRepository, OCDocumentosRepository>();
 
             //JWT Authentication
             var key = Encoding.ASCII.GetBytes(builder.Configuration["JWT:Key"]);
